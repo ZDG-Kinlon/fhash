@@ -19,9 +19,12 @@ trunk/fHashMacUI.xcodeproj/project.xcworkspace/xcshareddata/*
 trunk/fHash.xcworkspace/xcshareddata/*
 trunk/fHash.xcworkspace/xcuserdata/*
 trunk/DerivedData/*
+trunk/ipch/*
+trunk/Backup/*
 *.aps
 *.ncb
 *.old
 *.suo
 *.user
+*.sdf
 UpgradeLog*

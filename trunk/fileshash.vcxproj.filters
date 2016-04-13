@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{0433d6b5-a5d0-4f82-b62b-78ae4d139b97}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{d4f4bec3-394f-4896-b8dc-0b282df55036}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{0cc07e4c-9e86-41f2-b573-f47df091eb43}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest</Extensions>
+    </Filter>
+    <Filter Include="算法">
+      <UniqueIdentifier>{bc918373-a936-4aeb-8c6b-41673c610e7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OsUtils">
+      <UniqueIdentifier>{35d03d97-28bb-4287-b523-0389107204e8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\AboutDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EditEx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FilesHash.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FilesHashDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FindDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\HashEngine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ShellExtComm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\strhelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\UIBridgeMFC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\UIStringsBase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\UIStringsZHCN.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Utils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\WindowsStrings.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\WindowsStringsInternal.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\WindowsUtils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Algorithms\CRC32.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Algorithms\MD5.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Algorithms\SHA1.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Algorithms\sha256.cpp">
+      <Filter>算法</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OsUtils\OsFileWinAfx.cpp">
+      <Filter>OsUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OsUtils\OsThreadWinApi.cpp">
+      <Filter>OsUtils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\AboutDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\EditEx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FilesHash.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FilesHashDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FindDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Global.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\HashEngine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ShellExtComm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\strhelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\UIBridgeBase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\UIBridgeMFC.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\UIStringsBase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\UIStringsZHCN.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Utils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\version.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WindowsStrings.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WindowsStringsInternal.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\WindowsUtils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Algorithms\CRC32.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Algorithms\md5.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Algorithms\SHA1.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Algorithms\sha256.h">
+      <Filter>算法</Filter>
+    </ClInclude>
+    <ClInclude Include="source\OsUtils\OsFile.h">
+      <Filter>OsUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\OsUtils\OsThread.h">
+      <Filter>OsUtils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="source\res\compatibility.manifest">
+      <Filter>资源文件</Filter>
+    </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="source\fileshash.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="source\res\fileshash.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="source\res\icon1.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ChangeLog.txt" />
+  </ItemGroup>
+</Project>
