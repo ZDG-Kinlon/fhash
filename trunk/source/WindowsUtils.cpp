@@ -186,7 +186,7 @@ namespace WindowsUtils
 
 			///osvi.dwMajorVersion = 6;
 
-			if(osvi.dwMajorVersion != 6)
+			if(osvi.dwMajorVersion < 6)
 			{
 				if(osvi.wSuiteMask & VER_SUITE_PERSONAL)
 					osinfo.Append(_T( "Home Edition "));
@@ -195,7 +195,8 @@ namespace WindowsUtils
 			}
 			else
 			{
-				// 获得GetProductInfo函数原型
+				// >= 6, Vista, 7, 8, 10...
+				// 获得 GetProductInfo 函数原型
 				PGPI pGetProductInfo  = NULL;
 				pGetProductInfo = (PGPI)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "GetProductInfo");
 				if( pGetProductInfo != NULL )
@@ -205,58 +206,58 @@ namespace WindowsUtils
 					switch( dwProductType )
 					{
 					case PRODUCT_ULTIMATE:
-						osinfo.Append(_T("Ultimate Edition "));
+						osinfo.Append(_T("Ultimate "));
 						break;
 					case PRODUCT_PROFESSIONAL:
 						osinfo.Append(_T("Professional "));
 						break;
 					case PRODUCT_HOME_PREMIUM:
-						osinfo.Append(_T("Home Premium Edition "));
+						osinfo.Append(_T("Home Premium "));
 						break;
 					case PRODUCT_HOME_BASIC:
-						osinfo.Append(_T("Home Basic Edition "));
+						osinfo.Append(_T("Home Basic "));
 						break;
 					case PRODUCT_ENTERPRISE:
-						osinfo.Append(_T("Enterprise Edition "));
+						osinfo.Append(_T("Enterprise "));
 						break;
 					case PRODUCT_BUSINESS:
-						osinfo.Append(_T("Business Edition "));
+						osinfo.Append(_T("Business "));
 						break;
 					case PRODUCT_STARTER:
-						osinfo.Append(_T("Starter Edition "));
+						osinfo.Append(_T("Starter "));
 						break;
 					case PRODUCT_CLUSTER_SERVER:
-						osinfo.Append(_T("Cluster Server Edition "));
+						osinfo.Append(_T("HPC Edition "));
 						break;
 					case PRODUCT_DATACENTER_SERVER:
-						osinfo.Append(_T("Datacenter Edition "));
+						osinfo.Append(_T("Datacenter "));
 						break;
 					case PRODUCT_DATACENTER_SERVER_CORE:
-						osinfo.Append(_T("Datacenter Edition (core installation) "));
+						osinfo.Append(_T("Datacenter (core installation) "));
 						break;
 					case PRODUCT_ENTERPRISE_SERVER:
-						osinfo.Append(_T("Enterprise Edition "));
+						osinfo.Append(_T("Enterprise "));
 						break;
 					case PRODUCT_ENTERPRISE_SERVER_CORE:
-						osinfo.Append(_T("Enterprise Edition (core installation) "));
+						osinfo.Append(_T("Enterprise (core installation) "));
 						break;
 					case PRODUCT_ENTERPRISE_SERVER_IA64:
-						osinfo.Append(_T("Enterprise Edition for Itanium-based Systems "));
+						osinfo.Append(_T("Enterprise for Itanium-based Systems "));
 						break;
 					case PRODUCT_SMALLBUSINESS_SERVER:
 						osinfo.Append(_T("Small Business Server "));
 						break;
 					case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
-						osinfo.Append(_T("Small Business Server Premium Edition "));
+						osinfo.Append(_T("Small Business Server Premium "));
 						break;
 					case PRODUCT_STANDARD_SERVER:
-						osinfo.Append(_T("Standard Edition "));
+						osinfo.Append(_T("Standard "));
 						break;
 					case PRODUCT_STANDARD_SERVER_CORE:
-						osinfo.Append(_T("Standard Edition (core installation) "));
+						osinfo.Append(_T("Standard (core installation) "));
 						break;
 					case PRODUCT_WEB_SERVER:
-						osinfo.Append(_T("Web Server Edition "));
+						osinfo.Append(_T("Web Server "));
 						break;
 					}
 				}
@@ -377,9 +378,17 @@ namespace WindowsUtils
 				else // Windows NT 4.0 prior to SP6a
 				{
 					CString spinfo;
-					spinfo.Format( _T("%s (Build %d)\r\n"),
-						osvi.szCSDVersion,
-						osvi.dwBuildNumber & 0xFFFF);
+					if(CString::StringLength(osvi.szCSDVersion) > 0)
+					{
+						spinfo.Format( _T("%s (Build %d)\r\n"),
+							osvi.szCSDVersion,
+							osvi.dwBuildNumber & 0xFFFF);
+					}
+					else
+					{
+						spinfo.Format( _T("(Build %d)\r\n"),
+							osvi.dwBuildNumber & 0xFFFF);
+					}
 					osinfo.Append(spinfo);
 				}
 
@@ -388,9 +397,17 @@ namespace WindowsUtils
 			else // not Windows NT 4.0 
 			{
 				CString spinfo;
-				spinfo.Format(_T("%s (Build %d)\r\n"),
-					osvi.szCSDVersion,
-					osvi.dwBuildNumber & 0xFFFF);
+				if(CString::StringLength(osvi.szCSDVersion) > 0)
+				{
+					spinfo.Format( _T("%s (Build %d)\r\n"),
+						osvi.szCSDVersion,
+						osvi.dwBuildNumber & 0xFFFF);
+				}
+				else
+				{
+					spinfo.Format( _T("(Build %d)\r\n"),
+						osvi.dwBuildNumber & 0xFFFF);
+				}
 				osinfo.Append(spinfo);
 			}
 
