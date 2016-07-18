@@ -5,7 +5,7 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 
-#include "EditEx.h"
+#include "HyperEditHash.h"
 
 #include "strhelper.h"
 #include "OsUtils/OsThread.h"
@@ -44,13 +44,21 @@ public:
 	afx_msg void OnClose();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg LRESULT OnThreadMsg(WPARAM, LPARAM);
+	afx_msg LRESULT OnCustomMsg(WPARAM, LPARAM);
+	afx_msg void OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu);
+	afx_msg void OnHypereditmenuCopyhash();
+	afx_msg void OnHypereditmenuSearchgoogle();
+	afx_msg void OnHypereditmenuSearchvirustotal();
+	afx_msg void OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateHypereditmenuSearchgoogle(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateHypereditmenuSearchvirustotal(CCmdUI *pCmdUI);
 
 // 实现
 protected:
 	HICON m_hIcon;
 
 	CProgressCtrl m_progWhole;
-	CEditEx m_editMain;
+	CHyperEditHash m_editMain;
 	CButton m_btnOpen;
 	CButton m_btnExit;
 	CButton m_btnClr;
@@ -58,7 +66,6 @@ protected:
 	CButton m_btnFind;
 	CButton m_chkUppercase;
 	CButton m_btnContext;
-	CBrush m_bruEditBkg;
 
 	sunjwbase::OsMutex m_mainMtx;
 
@@ -66,7 +73,6 @@ protected:
 	ThreadData m_thrdData;
 	HANDLE m_hWorkThread;
 	float m_calculateTime;
-	sunjwbase::tstring m_tstrAll;
 	UINT_PTR m_timer;
 	BOOL m_waitingExit; // 等待线程退出后，退出程序
 	BOOL m_bAdvTaskbar;
@@ -82,9 +88,9 @@ protected:
 	void ClearFilePaths();
 	void PrepareAdvTaskbar();
 
-	sunjwbase::tstring ResultFind(CString strFile, CString strHash);
+	void ResultFind(CString strFile, CString strHash);
 
-	void AppendResult(const ResultData& result, sunjwbase::tstring& tstrToAppend);
+	void AppendResult(const ResultData& result);
 
 	void DoMD5();
 	void StopWorkingThread();

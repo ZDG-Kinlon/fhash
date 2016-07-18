@@ -8,13 +8,14 @@
 #include "strhelper.h"
 #include "OsUtils/OsThread.h"
 #include "Global.h"
+#include "HyperEditHash.h"
 
 class UIBridgeMFC: public UIBridgeBase
 {
 public:
-	UIBridgeMFC(HWND hWnd, 
-				sunjwbase::tstring *tstrUIAll,
-				sunjwbase::OsMutex *mainMtx);
+	UIBridgeMFC(HWND hWnd,
+				sunjwbase::OsMutex *mainMtx,
+				CHyperEditHash *hyperEdit);
 	virtual ~UIBridgeMFC();
 
 	virtual void lockData();
@@ -37,11 +38,25 @@ public:
 	virtual void fileCalcFinish();
 	virtual void fileFinish();
 
+	static void AppendFileNameToHyperEdit(const ResultData& result,
+											CHyperEditHash *hyerEdit);
+	static void AppendFileMetaToHyperEdit(const ResultData& result,
+											CHyperEditHash *hyerEdit);
+	static void AppendFileHashToHyperEdit(const ResultData& result,
+											bool uppercase,
+											CHyperEditHash *hyerEdit);
+	static void AppendFileErrToHyperEdit(const ResultData& result,
+											CHyperEditHash *hyerEdit);
+	static void AppendResultToHyperEdit(const ResultData& result,
+										bool uppercase,
+										CHyperEditHash *hyerEdit);
+
 private:
 	HWND m_hWnd;
-	sunjwbase::tstring *m_uiTstrAll;
 	sunjwbase::OsMutex *m_mainMtx;
+	CHyperEditHash *m_mainHyperEdit;
 
+	OFFSETS m_offsetsNoPreparing;
 	sunjwbase::tstring m_tstrNoPreparing;
 };
 

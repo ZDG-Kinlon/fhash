@@ -42,6 +42,10 @@ namespace WindowsUtils
 	BOOL IsLimitedProc();
 	BOOL ElevateProcess();
 
+	void CopyCString(const CString& cstrToCopy);
+
+	HINSTANCE OpenURL(const TCHAR *pszURL);
+
 	bool FindShlExtDll(TCHAR *pszExeFullPath, TCHAR *pszShlDllPath);
 
 	bool RegShellExt(TCHAR *pszShlDllPath);
@@ -53,19 +57,6 @@ namespace WindowsUtils
 	bool AddContextMenu();
 	bool RemoveContextMenu();
 	bool ContextMenuExisted();
-
-	void AppendFileNameToTstring(const ResultData& result,
-								sunjwbase::tstring *tString);
-	void AppendFileMetaToTstring(const ResultData& result,
-								sunjwbase::tstring *tString);
-	void AppendFileHashToTstring(const ResultData& result,
-								bool uppercase,
-								sunjwbase::tstring *tString);
-	void AppendFileErrToTstring(const ResultData& result,
-								sunjwbase::tstring *tString);
-	void AppendResultToTstring(const ResultData& result,
-								bool uppercase,
-								sunjwbase::tstring *tString);
 
 }
 
