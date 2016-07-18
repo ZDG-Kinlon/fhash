@@ -24,9 +24,6 @@
     <ClCompile Include="source\AboutDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="source\EditEx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="source\FilesHash.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -87,12 +84,15 @@
     <ClCompile Include="source\OsUtils\OsThreadWinApi.cpp">
       <Filter>OsUtils</Filter>
     </ClCompile>
+    <ClCompile Include="source\HyperEdit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\HyperEditHash.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\AboutDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="source\EditEx.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="source\FilesHash.h">
@@ -169,6 +169,12 @@
     </ClInclude>
     <ClInclude Include="source\OsUtils\OsThread.h">
       <Filter>OsUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\HyperEdit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\HyperEditHash.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
