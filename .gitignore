@@ -27,6 +27,8 @@ trunk/Backup/*
 *.suo
 *.user
 *.sdf
+*.VC.db
+*.VC.opendb
 *.DS_Store
 UpgradeLog*
 
