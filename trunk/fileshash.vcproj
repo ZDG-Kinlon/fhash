@@ -389,10 +389,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\EditEx.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\source\FilesHash.cpp"
 				>
 			</File>
@@ -406,6 +402,14 @@
 			</File>
 			<File
 				RelativePath=".\source\HashEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\HyperEdit.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\HyperEditHash.cpp"
 				>
 			</File>
 			<File
@@ -458,10 +462,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\EditEx.h"
-				>
-			</File>
-			<File
 				RelativePath=".\source\FilesHash.h"
 				>
 			</File>
@@ -479,6 +479,14 @@
 			</File>
 			<File
 				RelativePath=".\source\HashEngine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\source\HyperEdit.h"
+				>
+			</File>
+			<File
+				RelativePath=".\source\HyperEditHash.h"
 				>
 			</File>
 			<File

@@ -42,6 +42,13 @@ enum MainViewControllerState {
 
 @property (assign) MainViewControllerState state;
 
+@property (nonatomic, strong) NSFont *mainFont;
+
+@property (nonatomic, strong) NSMutableParagraphStyle *mainParaStyle;
+@property (assign) BOOL needParaFix;
+
+@property (nonatomic, strong) NSString *selectedLink;
+
 @property (assign) UIBridgeMacUI *uiBridgeMac;
 
 @property (assign) uint64_t calcStartTime;
@@ -129,22 +136,30 @@ enum MainViewControllerState {
     self.mainScrollView.borderType = NSNoBorder;
     
     // Set some text in text field.
+    self.mainTextView.delegate = self;
     [self.mainTextView setTextContainerInset:NSMakeSize(4.0, 4.0)];
     
-    NSFont *fontForTextView = [NSFont fontWithName:@"Monaco" size:12];
-    if (fontForTextView != nil) {
-        [self.mainTextView setFont:fontForTextView];
+    self.mainFont = [NSFont fontWithName:@"Monaco" size:12];
+    if (self.mainFont == nil) {
+        self.mainFont = self.mainTextView.font;
     }
-    
+
+    self.mainParaStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    [self.mainParaStyle setLineSpacing:self.mainTextView.defaultParagraphStyle.lineSpacing + (float)4];
+
+    [self.mainTextView setFont:self.mainFont];
+
+    self.needParaFix = NO;
     NSString *prefLanguage = MacUtils::GetSystemPreferredLanguage();
     if ([prefLanguage hasPrefix:@"zh"] &&
         MacUtils::IsSystemEarlierThan10_11()) {
         // Below 10.11, Chinese fonts is not good.
         // Make a little tweak.
-        NSMutableParagraphStyle *paraStyle =[[NSParagraphStyle defaultParagraphStyle]
-                                             mutableCopy];
-        [paraStyle setLineSpacing:self.mainTextView.defaultParagraphStyle.lineSpacing + (float)4];
-        [self.mainTextView setDefaultParagraphStyle:paraStyle];
+        self.needParaFix = YES;
+    }
+
+    if (self.needParaFix) {
+        [self.mainTextView setDefaultParagraphStyle:self.mainParaStyle];
     }
     
     [self.mainTextView setUsesFindBar:YES];
@@ -216,12 +231,12 @@ enum MainViewControllerState {
             
             _mainMtx->lock();
             {
-                _mainText = [[NSMutableString alloc] init];
+                _mainText = [[NSMutableAttributedString alloc] init];
                 string strAppend = GetStringFromResByKey(MAINDLG_INITINFO);
                 strAppend.append("\n\n");
                 NSString *nsstrAppend = MacUtils::ConvertUTF8StringToNSString(strAppend);
-                
-                [_mainText appendString:nsstrAppend];
+
+                MacUtils::AppendNSStringToNSMutableAttributedString(_mainText, nsstrAppend);
             }
             _mainMtx->unlock();
             
@@ -335,7 +350,24 @@ enum MainViewControllerState {
 
 - (void)updateMainTextView:(BOOL)keepScrollPosition {
     _mainMtx->lock();
-    [self.mainTextView setString:_mainText];
+
+    // Apply style to all text.
+    [_mainText beginEditing];
+
+    [_mainText addAttribute:NSFontAttributeName
+                      value:self.mainFont
+                      range:NSMakeRange(0, [_mainText length])];
+
+    if (self.needParaFix) {
+        [_mainText addAttribute:NSParagraphStyleAttributeName
+                          value:self.mainParaStyle
+                          range:NSMakeRange(0, [_mainText length])];
+    }
+
+    [_mainText endEditing];
+
+    [[self.mainTextView textStorage] setAttributedString:_mainText];
+
     _mainMtx->unlock();
     
     if (!keepScrollPosition) {
@@ -381,7 +413,7 @@ enum MainViewControllerState {
     NSString *nsstrAppend = MacUtils::ConvertUTF8StringToNSString(strAppend);
     
     _mainMtx->lock();
-    [_mainText appendString:nsstrAppend];
+    MacUtils::AppendNSStringToNSMutableAttributedString(_mainText, nsstrAppend);
     _mainMtx->unlock();
     
     [self setViewControllerState:MAINVC_CALC_FINISH];
@@ -398,7 +430,7 @@ enum MainViewControllerState {
     if (_state == MAINVC_NONE) {
         // Clear up text.
         _mainMtx->lock();
-        _mainText = [[NSMutableString alloc] init];
+        _mainText = [[NSMutableAttributedString alloc] init];
         _mainMtx->unlock();
     }
     
@@ -450,12 +482,12 @@ enum MainViewControllerState {
     
     _mainMtx->lock();
     {
-        _mainText = [[NSMutableString alloc] init];
+        _mainText = [[NSMutableAttributedString alloc] init];
         
         ResultList::iterator itr = _thrdData->resultList.begin();
         for(; itr != _thrdData->resultList.end(); ++itr)
         {
-            MacUtils::AppendResultToNSMutableString(*itr, _upperCaseState, _mainText);
+            UIBridgeMacUI::AppendResultToNSMutableAttributedString(*itr, _upperCaseState, _mainText);
         }
     }
     _mainMtx->unlock();
@@ -489,6 +521,58 @@ enum MainViewControllerState {
     if (_state == MAINVC_CALC_FINISH) {
         [self refreshResultText];
     }
+}
+
+- (BOOL)textView:(NSTextView *)aTextView
+   clickedOnLink:(id)link
+         atIndex:(NSUInteger)charIndex {
+    if (aTextView == self.mainTextView) {
+        self.selectedLink = (NSString *)link;
+
+        NSPoint nsptMouseLoc;
+        nsptMouseLoc = [NSEvent mouseLocation];
+        NSPoint nsptMouseInView = [self.view.window convertScreenToBase:nsptMouseLoc];
+
+        NSMenu *nsmenuHash = [[NSMenu alloc] initWithTitle:@"HashMenu"];
+        [nsmenuHash insertItemWithTitle:GetNSStringFromResByKey(MAINDLG_HYPEREDIT_MENU_COPY)
+                                 action:@selector(menuCopyHash)
+                          keyEquivalent:@""
+                                atIndex:0];
+        [nsmenuHash insertItem:[NSMenuItem separatorItem] atIndex:1];
+        [nsmenuHash insertItemWithTitle:GetNSStringFromResByKey(MAINDLG_HYPEREDIT_MENU_SERACHGOOGLE)
+                                 action:@selector(menuSearchGoogle)
+                          keyEquivalent:@""
+                                atIndex:2];
+        [nsmenuHash insertItemWithTitle:GetNSStringFromResByKey(MAINDLG_HYPEREDIT_MENU_SERACHVIRUSTOTAL)
+                                 action:@selector(menuSearchVirusTotal)
+                          keyEquivalent:@""
+                                atIndex:3];
+
+        [nsmenuHash popUpMenuPositioningItem:nil atLocation:nsptMouseInView inView:self.view];
+
+        
+        return YES;
+    }
+
+    return NO;
+}
+
+- (void)menuCopyHash {
+    NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+    [pasteboard clearContents];
+    [pasteboard setString:self.selectedLink forType:NSStringPboardType];
+}
+
+- (void)menuSearchGoogle {
+    NSString *nstrUrl = [NSString stringWithFormat:@"https://www.google.com/search?q=%@&ie=utf-8&oe=utf-8", self.selectedLink];
+    NSURL *url = [NSURL URLWithString:nstrUrl];
+    [[NSWorkspace sharedWorkspace] openURL:url];
+}
+
+- (void)menuSearchVirusTotal {
+    NSString *nstrUrl = [NSString stringWithFormat:@"https://www.virustotal.com/en/search/?query=%@", self.selectedLink];
+    NSURL *url = [NSURL URLWithString:nstrUrl];
+    [[NSWorkspace sharedWorkspace] openURL:url];
 }
 
 @end

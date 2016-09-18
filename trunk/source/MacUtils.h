@@ -105,38 +105,16 @@ namespace MacUtils {
      * Get specific named string as NSString.
      */
     NSString *GetNSStringFromRes(NSString *nsstrKey);
-    
+
     /**
-     * Append file name in ResultData to NSMutableString.
+     * Convert NSString to plain NSAttributedString.
      */
-    void AppendFileNameToNSMutableString(const ResultData& result,
-                                         NSMutableString *nsmutString);
-    
+    NSAttributedString *ConvertNSStringToNSAttributedString(NSString *str);
+
     /**
-     * Append file meta in ResultData to NSMutableString.
+     * Append NSString to NSMutableAttributedString.
      */
-    void AppendFileMetaToNSMutableString(const ResultData& result,
-                                         NSMutableString *nsmutString);
-    
-    /**
-     * Append file hash result in ResultData to NSMutableString.
-     */
-    void AppendFileHashToNSMutableString(const ResultData& result,
-                                         bool uppercase,
-                                         NSMutableString *nsmutString);
-    
-    /**
-     * Append file error message in ResultData to NSMutableString.
-     */
-    void AppendFileErrToNSMutableString(const ResultData& result,
-                                        NSMutableString *nsmutString);
-    
-    /**
-     * Append whole ResultData to NSMutableString.
-     */
-    void AppendResultToNSMutableString(const ResultData& result,
-                                       bool uppercase,
-                                       NSMutableString *nsmutString);
+    void AppendNSStringToNSMutableAttributedString(NSMutableAttributedString *base, NSString *str);
     
 }
 

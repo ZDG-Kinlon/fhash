@@ -54,16 +54,25 @@ BEGIN_MESSAGE_MAP(CFilesHashDlg, CDialog)
 	ON_BN_CLICKED(IDC_OPEN, OnBnClickedOpen)
 	ON_BN_CLICKED(IDC_EXIT, OnBnClickedExit)
 	ON_BN_CLICKED(IDC_ABOUT, OnBnClickedAbout)
-	ON_WM_DROPFILES()
 	ON_BN_CLICKED(IDC_CLEAN, OnBnClickedClean)
 	ON_BN_CLICKED(IDC_COPY, OnBnClickedCopy)
-	ON_WM_TIMER()
-	ON_WM_CTLCOLOR()
-	ON_WM_CLOSE()
-	ON_MESSAGE(WM_THREAD_INFO, OnThreadMsg)
 	ON_BN_CLICKED(IDC_FIND, &CFilesHashDlg::OnBnClickedFind)
 	ON_BN_CLICKED(IDC_CONTEXT, &CFilesHashDlg::OnBnClickedContext)
 	ON_BN_CLICKED(IDC_CHECKUP, &CFilesHashDlg::OnBnClickedCheckup)
+	ON_BN_CLICKED(IDC_STATIC_UPPER, &CFilesHashDlg::OnBnClickedUpperHash)
+	ON_WM_DROPFILES()
+	ON_WM_TIMER()
+	ON_WM_CTLCOLOR()
+	ON_WM_CLOSE()
+	ON_WM_INITMENUPOPUP()
+	ON_MESSAGE(WM_THREAD_INFO, OnThreadMsg)
+	ON_MESSAGE(WM_CUSTOM_MSG, OnCustomMsg)
+	ON_COMMAND(ID_HYPEREDITMENU_COPYHASH, &CFilesHashDlg::OnHypereditmenuCopyhash)
+	ON_COMMAND(ID_HYPEREDITMENU_SEARCHGOOGLE, &CFilesHashDlg::OnHypereditmenuSearchgoogle)
+	ON_COMMAND(ID_HYPEREDITMENU_SEARCHVIRUSTOTAL, &CFilesHashDlg::OnHypereditmenuSearchvirustotal)
+	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_COPYHASH, &CFilesHashDlg::OnUpdateHypereditmenuCopyhash)
+	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_SEARCHGOOGLE, &CFilesHashDlg::OnUpdateHypereditmenuSearchgoogle)
+	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_SEARCHVIRUSTOTAL, &CFilesHashDlg::OnUpdateHypereditmenuSearchvirustotal)
 END_MESSAGE_MAP()
 
 
@@ -79,8 +88,6 @@ BOOL CFilesHashDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO：在此添加额外的初始化代码
-
-	m_bruEditBkg.CreateSolidBrush(RGB(255, 255, 255));
 
 	PrepareAdvTaskbar();
 
@@ -112,25 +119,25 @@ BOOL CFilesHashDlg::OnInitDialog()
 	pWnd = GetDlgItem(IDC_ABOUT);
 	pWnd->SetWindowText(GetStringByKey(MAINDLG_ABOUT));
 
-	m_uiBridgeMFC = new UIBridgeMFC(m_hWnd, &m_tstrAll, &m_mainMtx);
+	m_uiBridgeMFC = new UIBridgeMFC(GetSafeHwnd(), &m_mainMtx, &m_editMain);
 
 	m_mainMtx.lock();
 	{
-		m_tstrAll = _T("");
-
 		m_thrdData.uiBridge = m_uiBridgeMFC;
 		m_thrdData.uppercase = false;
 
 		m_thrdData.nFiles = 0;
 
 		m_thrdData.resultList.clear();
+
+		m_editMain.SetLimitText(UINT_MAX);
+		m_editMain.ClearTextBuffer();
+		m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_INITINFO));
+		m_editMain.ShowTextBuffer();
 	}
 	m_mainMtx.unlock();
 	
 	pTl = NULL;
-
-	m_editMain.SetLimitText(UINT_MAX);
-	m_editMain.SetWindowText(GetStringByKey(MAINDLG_INITINFO));
 
 	if(WindowsUtils::ContextMenuExisted())
 	{
@@ -349,11 +356,9 @@ void CFilesHashDlg::OnBnClickedClean()
 		{
 			m_mainMtx.lock();
 			{
-				m_tstrAll = _T("");
-
+				m_editMain.ClearTextBuffer();
 				m_thrdData.resultList.clear();
-			
-				m_editMain.SetWindowText(m_tstrAll.c_str());
+				m_editMain.ShowTextBuffer();
 			}
 			m_mainMtx.unlock();
 
@@ -379,10 +384,9 @@ void CFilesHashDlg::OnBnClickedCopy()
 {
 	if(!m_thrdData.threadWorking)
 	{
-		m_editMain.SetSel(0, -1);
-		m_editMain.Copy();
-		m_editMain.SetSel(-1,0);
-		m_editMain.LineScroll(m_editMain.GetLineCount()); // 将文本框滚动到结尾
+		CString cstrMain;
+		m_editMain.GetWindowText(cstrMain);
+		WindowsUtils::CopyCString(cstrMain);
 	}
 }
 
@@ -398,9 +402,10 @@ void CFilesHashDlg::OnBnClickedFind()
 		{
 			m_bFind = TRUE; // 进入搜索模式
 			m_btnClr.SetWindowText(GetStringByKey(MAINDLG_CLEAR_VERIFY));
-			//m_editMain.SetWindowText(_T(""));
-			tstring tstrResult = ResultFind(m_strFindFile, m_strFindHash);
-			m_editMain.SetWindowText(tstrResult.c_str());
+
+			m_editMain.ClearTextBuffer();
+			ResultFind(m_strFindFile, m_strFindHash);
+			m_editMain.ShowTextBuffer();
 			//m_editMain.LineScroll(m_editMain.GetLineCount()); // 将文本框滚动到结尾
 		}
 	}
@@ -467,12 +472,22 @@ void CFilesHashDlg::OnBnClickedCheckup()
 	else
 	{
 		// Search mode
-		tstring tstrResult = ResultFind(m_strFindFile, m_strFindHash);
-		m_editMain.SetWindowText(tstrResult.c_str());
+		m_editMain.ClearTextBuffer();
+		ResultFind(m_strFindFile, m_strFindHash);
+		m_editMain.ShowTextBuffer();
 	}
 
 	// Reset scroll position
 	m_editMain.LineScroll(iFirstVisible);
+}
+
+void CFilesHashDlg::OnBnClickedUpperHash()
+{
+	if (m_chkUppercase.IsWindowEnabled())
+	{
+		m_chkUppercase.SetCheck(!m_chkUppercase.GetCheck());
+		OnBnClickedCheckup();
+	}
 }
 
 void CFilesHashDlg::OnTimer(UINT_PTR nIDEvent)
@@ -503,7 +518,7 @@ void CFilesHashDlg::SetWholeProgPos(UINT pos)
 {
 	m_progWhole.SetPos(pos);
 	if(m_bAdvTaskbar)
-		pTl->SetProgressValue(this->m_hWnd, pos, 99);
+		pTl->SetProgressValue(GetSafeHwnd(), pos, 99);
 }
 
 void CFilesHashDlg::DoMD5()
@@ -558,13 +573,6 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	// TODO:  在此更改 DC 的任何属性
 
 	// TODO:  如果默认的不是所需画笔，则返回另一个画笔
-	if(pWnd->GetDlgCtrlID() == IDE_TXTMAIN)
-	{
-		pDC->SetBkMode(TRANSPARENT);
-
-
-		hbr = m_bruEditBkg;
-	}
 	return hbr;
 }
 
@@ -618,21 +626,23 @@ void CFilesHashDlg::SetCtrls(BOOL working)
 
 void CFilesHashDlg::RefreshResult()
 {
-	m_tstrAll = _T("");
+	m_editMain.ClearTextBuffer();
 	ResultList::iterator itr = m_thrdData.resultList.begin();
 	for(; itr != m_thrdData.resultList.end(); ++itr)
 	{
-		AppendResult(*itr, m_tstrAll);
+		AppendResult(*itr);
 	}
 }
 
 void CFilesHashDlg::RefreshMainText(BOOL bScrollToEnd /*= TRUE*/)
 {
 	m_mainMtx.lock();
-	m_editMain.SetWindowText(m_tstrAll.c_str());
-	m_mainMtx.unlock();
+
+	m_editMain.ShowTextBuffer();
 	if(bScrollToEnd)
 		m_editMain.LineScroll(m_editMain.GetLineCount()); // 将文本框滚动到结尾
+
+	m_mainMtx.unlock();
 }
 
 void CFilesHashDlg::CalcSpeed(ULONGLONG tsize)
@@ -702,15 +712,14 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 		
 		m_mainMtx.lock();
 		{
-			m_tstrAll.append(_T("\r\n"));
-			//m_tstrAll.append(MAINDLG_CALCU_TERMINAL);
-			//m_tstrAll.append(_T("\r\n\r\n"));
+			m_editMain.AppendTextToBuffer(_T("\r\n"));
+			//m_editMain.AppendTextToBuffer(MAINDLG_CALCU_TERMINAL);
+			//m_editMain.AppendTextToBuffer(_T("\r\n\r\n"));
 
-			m_editMain.SetWindowText(m_tstrAll.c_str());
+			m_editMain.ShowTextBuffer();
+			m_editMain.LineScroll(m_editMain.GetLineCount()); // 将文本框滚动到结尾
 		}
 		m_mainMtx.unlock();
-			
-		m_editMain.LineScroll(m_editMain.GetLineCount()); // 将文本框滚动到结尾
 
 		SetWholeProgPos(0);
 		
@@ -724,16 +733,157 @@ LRESULT CFilesHashDlg::OnThreadMsg(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-tstring CFilesHashDlg::ResultFind(CString strFile, CString strHash)
+LRESULT CFilesHashDlg::OnCustomMsg(WPARAM wParam, LPARAM lParam)
 {
-	tstring tstrResult(GetStringByKey(MAINDLG_FIND_IN_RESULT));
-	tstrResult.append(_T("\r\n"));
-	tstrResult.append(GetStringByKey(HASHVALUE_STRING));
-	tstrResult.append(_T(" "));
-	tstrResult.append(strHash);
-	tstrResult.append(_T("\r\n\r\n"));
-	tstrResult.append(GetStringByKey(MAINDLG_RESULT));
-	tstrResult.append(_T("\r\n\r\n"));
+	switch(wParam)
+	{
+	case WM_HYPEREDIT_MENU:
+		{
+			CPoint cpPoint = m_editMain.GetLastScreenPoint();
+
+			CMenu menuHyperEdit;
+			menuHyperEdit.LoadMenu(IDR_MENU_HYPEREDIT);
+			CMenu *pmSubMenu = menuHyperEdit.GetSubMenu(0); 
+			ASSERT(pmSubMenu);
+			pmSubMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, 
+				cpPoint.x, cpPoint.y, this);
+		}
+		break;
+	}
+	
+	return 0;
+}
+
+void CFilesHashDlg::OnInitMenuPopup(CMenu *pPopupMenu, UINT nIndex, BOOL bSysMenu)
+{
+    ASSERT(pPopupMenu != NULL);
+    // Check the enabled state of various menu items.
+
+    CCmdUI state;
+    state.m_pMenu = pPopupMenu;
+    ASSERT(state.m_pOther == NULL);
+    ASSERT(state.m_pParentMenu == NULL);
+
+    // Determine if menu is popup in top-level menu and set m_pOther to
+    // it if so (m_pParentMenu == NULL indicates that it is secondary popup).
+    HMENU hParentMenu;
+    if (AfxGetThreadState()->m_hTrackingMenu == pPopupMenu->m_hMenu)
+        state.m_pParentMenu = pPopupMenu;    // Parent == child for tracking popup.
+    else if ((hParentMenu = ::GetMenu(m_hWnd)) != NULL)
+    {
+        CWnd* pParent = this;
+           // Child windows don't have menus--need to go to the top!
+        if (pParent != NULL &&
+           (hParentMenu = ::GetMenu(pParent->m_hWnd)) != NULL)
+        {
+           int nIndexMax = ::GetMenuItemCount(hParentMenu);
+           for (int nIndex = 0; nIndex < nIndexMax; nIndex++)
+           {
+            if (::GetSubMenu(hParentMenu, nIndex) == pPopupMenu->m_hMenu)
+            {
+                // When popup is found, m_pParentMenu is containing menu.
+                state.m_pParentMenu = CMenu::FromHandle(hParentMenu);
+                break;
+            }
+           }
+        }
+    }
+
+    state.m_nIndexMax = pPopupMenu->GetMenuItemCount();
+    for (state.m_nIndex = 0; state.m_nIndex < state.m_nIndexMax;
+      state.m_nIndex++)
+    {
+        state.m_nID = pPopupMenu->GetMenuItemID(state.m_nIndex);
+        if (state.m_nID == 0)
+           continue; // Menu separator or invalid cmd - ignore it.
+
+        ASSERT(state.m_pOther == NULL);
+        ASSERT(state.m_pMenu != NULL);
+        if (state.m_nID == (UINT)-1)
+        {
+           // Possibly a popup menu, route to first item of that popup.
+           state.m_pSubMenu = pPopupMenu->GetSubMenu(state.m_nIndex);
+           if (state.m_pSubMenu == NULL ||
+            (state.m_nID = state.m_pSubMenu->GetMenuItemID(0)) == 0 ||
+            state.m_nID == (UINT)-1)
+           {
+            continue;       // First item of popup can't be routed to.
+           }
+           state.DoUpdate(this, TRUE);   // Popups are never auto disabled.
+        }
+        else
+        {
+           // Normal menu item.
+           // Auto enable/disable if frame window has m_bAutoMenuEnable
+           // set and command is _not_ a system command.
+           state.m_pSubMenu = NULL;
+           state.DoUpdate(this, FALSE);
+        }
+
+        // Adjust for menu deletions and additions.
+        UINT nCount = pPopupMenu->GetMenuItemCount();
+        if (nCount < state.m_nIndexMax)
+        {
+           state.m_nIndex -= (state.m_nIndexMax - nCount);
+           while (state.m_nIndex < nCount &&
+            pPopupMenu->GetMenuItemID(state.m_nIndex) == state.m_nID)
+           {
+            state.m_nIndex++;
+           }
+        }
+        state.m_nIndexMax = nCount;
+    }
+}
+
+void CFilesHashDlg::OnHypereditmenuCopyhash()
+{
+	CString cstrHyperlink = m_editMain.GetLastHyperlink();
+	WindowsUtils::CopyCString(cstrHyperlink);
+}
+
+void CFilesHashDlg::OnHypereditmenuSearchgoogle()
+{
+	CString cstrHyperlink = m_editMain.GetLastHyperlink();
+	CString cstrGoogleLink;
+	cstrGoogleLink.Format(_T("https://www.google.com/search?q=%s&ie=utf-8&oe=utf-8"),
+		cstrHyperlink.GetString());
+	WindowsUtils::OpenURL(cstrGoogleLink);
+}
+
+void CFilesHashDlg::OnHypereditmenuSearchvirustotal()
+{
+	CString cstrHyperlink = m_editMain.GetLastHyperlink();
+	CString cstrVtLink;
+	cstrVtLink.Format(_T("https://www.virustotal.com/en/search/?query=%s"),
+		cstrHyperlink.GetString());
+	WindowsUtils::OpenURL(cstrVtLink);
+}
+
+void CFilesHashDlg::OnUpdateHypereditmenuCopyhash(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetText(GetStringByKey(MAINDLG_HYPEREDIT_MENU_COPY));
+}
+
+void CFilesHashDlg::OnUpdateHypereditmenuSearchgoogle(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetText(GetStringByKey(MAINDLG_HYPEREDIT_MENU_SERACHGOOGLE));
+}
+
+void CFilesHashDlg::OnUpdateHypereditmenuSearchvirustotal(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetText(GetStringByKey(MAINDLG_HYPEREDIT_MENU_SERACHVIRUSTOTAL));
+}
+
+void CFilesHashDlg::ResultFind(CString strFile, CString strHash)
+{
+	m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_FIND_IN_RESULT));
+	m_editMain.AppendTextToBuffer(_T("\r\n"));
+	m_editMain.AppendTextToBuffer(GetStringByKey(HASHVALUE_STRING));
+	m_editMain.AppendTextToBuffer(_T(" "));
+	m_editMain.AppendTextToBuffer(strHash);
+	m_editMain.AppendTextToBuffer(_T("\r\n\r\n"));
+	m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_RESULT));
+	m_editMain.AppendTextToBuffer(_T("\r\n\r\n"));
 
 	strHash.MakeUpper();
 	strFile.MakeLower();
@@ -753,18 +903,16 @@ tstring CFilesHashDlg::ResultFind(CString strFile, CString strHash)
 		{
 			++count;
 
-			AppendResult(*itr, tstrResult);
+			AppendResult(*itr);
 		}
 	}
 
 	if(count == 0)
-		tstrResult.append(GetStringByKey(MAINDLG_NORESULT));
-
-	return tstrResult;
+		m_editMain.AppendTextToBuffer(GetStringByKey(MAINDLG_NORESULT));
 }
 
-void CFilesHashDlg::AppendResult(const ResultData& result, tstring& tstrToAppend)
+void CFilesHashDlg::AppendResult(const ResultData& result)
 {
 	m_thrdData.uppercase = (m_chkUppercase.GetCheck() != FALSE);
-	WindowsUtils::AppendResultToTstring(result, m_thrdData.uppercase, &tstrToAppend);
+	UIBridgeMFC::AppendResultToHyperEdit(result, m_thrdData.uppercase, &m_editMain);
 }
