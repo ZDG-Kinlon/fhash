@@ -73,6 +73,7 @@ BEGIN_MESSAGE_MAP(CFilesHashDlg, CDialog)
 	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_COPYHASH, &CFilesHashDlg::OnUpdateHypereditmenuCopyhash)
 	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_SEARCHGOOGLE, &CFilesHashDlg::OnUpdateHypereditmenuSearchgoogle)
 	ON_UPDATE_COMMAND_UI(ID_HYPEREDITMENU_SEARCHVIRUSTOTAL, &CFilesHashDlg::OnUpdateHypereditmenuSearchvirustotal)
+	ON_WM_COPYDATA()
 END_MESSAGE_MAP()
 
 
@@ -154,7 +155,7 @@ BOOL CFilesHashDlg::OnInitDialog()
 	SetCtrls(FALSE);
 
 	// 从命令行获取文件路径
-	TStrVector Paras = ParseCmdLine();
+	TStrVector Paras = ParseFilesCmdLine(theApp.m_lpCmdLine);
 	ClearFilePaths();
 	for(TStrVector::iterator ite = Paras.begin(); ite != Paras.end(); ++ite)
 	{
@@ -216,8 +217,8 @@ void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 		TCHAR tszDragFilename[MAX_PATH];
 		DragAcceptFiles(FALSE);
 
-		m_thrdData.nFiles = DragQueryFile(hDropInfo, -1, NULL, 0);
 		ClearFilePaths();
+		m_thrdData.nFiles = DragQueryFile(hDropInfo, -1, NULL, 0);
 
 		for(i = 0; i < m_thrdData.nFiles; i++)
 		{
@@ -233,15 +234,48 @@ void CFilesHashDlg::OnDropFiles(HDROP hDropInfo)
 	}
 }
 
-TStrVector CFilesHashDlg::ParseCmdLine()
+
+BOOL CFilesHashDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 {
-	// 从命令行获取文件路径
+	if (pCopyDataStruct->dwData == 0)
+		SetForegroundWindow();
+
+	if (pCopyDataStruct->dwData == 0 && !m_thrdData.threadWorking)
+	{
+		TCHAR *szFiles = (TCHAR *)(pCopyDataStruct->lpData);
+		TStrVector Paras = ParseFilesCmdLine(szFiles);
+		ClearFilePaths();
+		for(TStrVector::iterator ite = Paras.begin(); ite != Paras.end(); ++ite)
+		{
+			tstring tstrFile(*ite);
+			tstrFile = strtrim(tstrFile);
+			if (tstrFile.length() > 0)
+			{
+				m_thrdData.fullPaths.push_back(*ite);
+				++m_thrdData.nFiles;
+			}
+		}
+
+		if (m_thrdData.nFiles > 0)
+		{
+			DoMD5();
+		}
+
+		return TRUE;
+	}
+
+	return CDialog::OnCopyData(pWnd, pCopyDataStruct);
+}
+
+TStrVector CFilesHashDlg::ParseFilesCmdLine(LPTSTR filesCmdLine)
+{
+	// Parse files from string like 'xxx "yy zz" ...'
 	TStrVector parameters;
 
 #if defined(UNICODE) || defined(_UNICODE)
-	size_t cmdLen = wcslen(theApp.m_lpCmdLine);
+	size_t cmdLen = wcslen(filesCmdLine);
 #else
-	size_t cmdLen = strlen(theApp.m_lpCmdLine);
+	size_t cmdLen = strlen(filesCmdLine);
 #endif
 
 	if(cmdLen > 0)
@@ -249,18 +283,18 @@ TStrVector CFilesHashDlg::ParseCmdLine()
 		for(size_t i = 0; i < cmdLen; ++i)
 		{
 			tstring tstrPara(_T(""));
-			if(theApp.m_lpCmdLine[i] == '"')
+			if(filesCmdLine[i] == '"')
 			{
 				++i;
-				for(; theApp.m_lpCmdLine[i] != '"'; ++i)
-					tstrPara += theApp.m_lpCmdLine[i];
+				for(; filesCmdLine[i] != '"'; ++i)
+					tstrPara += filesCmdLine[i];
 				parameters.push_back(tstrPara);
 				++i;
 			}
 			else
 			{
-				for(; theApp.m_lpCmdLine[i] != ' '; ++i)
-					tstrPara += theApp.m_lpCmdLine[i];
+				for(; filesCmdLine[i] != ' '; ++i)
+					tstrPara += filesCmdLine[i];
 				parameters.push_back(tstrPara);
 			}
 		}
@@ -578,6 +612,7 @@ HBRUSH CFilesHashDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 void CFilesHashDlg::ClearFilePaths()
 {
+	m_thrdData.nFiles = 0;
 	m_thrdData.fullPaths.clear();
 }
 
@@ -854,7 +889,7 @@ void CFilesHashDlg::OnHypereditmenuSearchvirustotal()
 {
 	CString cstrHyperlink = m_editMain.GetLastHyperlink();
 	CString cstrVtLink;
-	cstrVtLink.Format(_T("https://www.virustotal.com/en/search/?query=%s"),
+	cstrVtLink.Format(_T("https://www.virustotal.com/#/search/%s"),
 		cstrHyperlink.GetString());
 	WindowsUtils::OpenURL(cstrVtLink);
 }
@@ -916,3 +951,4 @@ void CFilesHashDlg::AppendResult(const ResultData& result)
 	m_thrdData.uppercase = (m_chkUppercase.GetCheck() != FALSE);
 	UIBridgeMFC::AppendResultToHyperEdit(result, m_thrdData.uppercase, &m_editMain);
 }
+

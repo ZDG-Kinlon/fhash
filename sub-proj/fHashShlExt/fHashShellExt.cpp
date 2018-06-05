@@ -5,6 +5,9 @@
 
 #include <string>
 #include <atlconv.h>
+
+#include "Psapi.h"
+
 #include "strhelper.h"
 #include "ShellExtComm.h"
 #include "WindowsStrings.h"
@@ -14,6 +17,8 @@
 using namespace std;
 using namespace sunjwbase;
 using namespace WindowsStrings;
+
+#define MAX_FILE_CMD 32768
 
 // CfHashShellExt
 CfHashShellExt::CfHashShellExt()
@@ -150,48 +155,12 @@ HRESULT CfHashShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
     {
     case 0:
 		{
-			tstring tstrfHashPath = m_fHashPath;
-			tstring tstrCmd = _T("\"") + tstrfHashPath + _T("\"");
+			HWND hWndfHash = FindfHashWindow();
+			if (hWndfHash == NULL) // Launch and calculate...
+				return LaunchfHashByCommandLine(pCmdInfo, TRUE);
 
-			for(TstrList::const_iterator itr = m_pathList.begin();
-				itr != m_pathList.end();
-				++itr)
-			{
-				tstrCmd.append(_T(" "));
-				tstrCmd.append(_T("\""));
-				tstrCmd.append(*itr);
-				tstrCmd.append(_T("\""));
-			}
-
-			size_t cmdLen = tstrCmd.length() + 1;
-			if(cmdLen > 32768)
-			{
-				MessageBox(pCmdInfo->hwnd, 
-					GetStringByKey(SHELL_EXT_TOO_MANY_FILES), 
-					GetStringByKey(SHELL_EXT_TOO_MANY_FILES), 
-					MB_OK | MB_ICONWARNING);
-				return S_OK;
-			}
-
-			TCHAR *pszCmd = new TCHAR[cmdLen];
-			memset(pszCmd, 0, cmdLen);
-#if defined(UNICODE) || defined(_UNICODE)
-			wcscpy(pszCmd, tstrCmd.c_str());
-#else
-			strcpy(pszCmd, tstrCmd.c_str());
-#endif
-
-			STARTUPINFO sInfo = {0};
-			sInfo.cb = sizeof(sInfo);
-			PROCESS_INFORMATION pInfo = {0};
-
-			CreateProcess(tstrfHashPath.c_str(), pszCmd,
-							0, 0, TRUE,
-							NORMAL_PRIORITY_CLASS,
-							0, 0, &sInfo, &pInfo);
-	 
-			delete [] pszCmd;
-
+			// Found fHash, send message.
+			SendFilesTofHash(pCmdInfo, hWndfHash);
 			return S_OK;
 		}
 		break;
@@ -200,4 +169,119 @@ HRESULT CfHashShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO pCmdInfo)
 		return E_INVALIDARG;
 		break;
     }
+
+	return S_OK;
+}
+
+HRESULT CfHashShellExt::LaunchfHashByCommandLine(LPCMINVOKECOMMANDINFO pCmdInfo, BOOL bWithFiles)
+{
+	tstring tstrfHashPath = m_fHashPath;
+	// fHash.exe
+	tstring tstrCmd = _T("\"") + tstrfHashPath + _T("\"");
+
+	if (bWithFiles == TRUE)
+	{
+		// Files...
+		for(TstrList::const_iterator itr = m_pathList.begin();
+			itr != m_pathList.end();
+			++itr)
+		{
+			tstrCmd.append(_T(" "));
+			tstrCmd.append(_T("\""));
+			tstrCmd.append(*itr);
+			tstrCmd.append(_T("\""));
+		}
+	}
+
+	size_t cmdLen = tstrCmd.length() + 1;
+	if(cmdLen > MAX_FILE_CMD)
+	{
+		MessageBox(pCmdInfo->hwnd, 
+			GetStringByKey(SHELL_EXT_TOO_MANY_FILES), 
+			GetStringByKey(SHELL_EXT_TOO_MANY_FILES), 
+			MB_OK | MB_ICONWARNING);
+		return S_OK;
+	}
+
+	TCHAR *pszCmd = new TCHAR[cmdLen];
+	memset(pszCmd, 0, cmdLen);
+#if defined(UNICODE) || defined(_UNICODE)
+	wcscpy_s(pszCmd, cmdLen, tstrCmd.c_str());
+#else
+	strcpy_s(pszCmd, cmdLen, tstrCmd.c_str());
+#endif
+
+	STARTUPINFO sInfo = {0};
+	sInfo.cb = sizeof(sInfo);
+	PROCESS_INFORMATION pInfo = {0};
+
+	CreateProcess(tstrfHashPath.c_str(), pszCmd,
+		0, 0, TRUE,
+		NORMAL_PRIORITY_CLASS,
+		0, 0, &sInfo, &pInfo);
+
+	delete [] pszCmd;
+
+	return S_OK;
+}
+
+HWND CfHashShellExt::FindfHashWindow()
+{
+	HWND hWndfHash = NULL;
+	hWndfHash = FindWindow(_T("#32770"), _T("fHash"));
+	if (hWndfHash == NULL)
+		return NULL;
+
+	DWORD dwPidfHash = 0;
+	GetWindowThreadProcessId(hWndfHash, &dwPidfHash);
+	HANDLE hProcfHash = OpenProcess(PROCESS_ALL_ACCESS, TRUE, dwPidfHash);
+	if (hProcfHash == NULL)
+		return NULL;
+
+	TCHAR szExecutable[MAX_PATH + 1] = {0};
+	if (GetModuleFileNameEx(hProcfHash, NULL, szExecutable, MAX_PATH) <= 0)
+		return NULL;
+
+	tstring tstrProcfHashPath(szExecutable);
+	if (tstrProcfHashPath == m_fHashPath)
+		return hWndfHash;
+
+	return NULL;
+}
+
+void CfHashShellExt::SendFilesTofHash(LPCMINVOKECOMMANDINFO pCmdInfo, HWND hWndfHash)
+{
+	if (hWndfHash == NULL)
+		return;
+
+	tstring tstrFiles;
+	for(TstrList::const_iterator itr = m_pathList.begin();
+		itr != m_pathList.end();
+		++itr)
+	{
+		tstrFiles.append(_T(" "));
+		tstrFiles.append(_T("\""));
+		tstrFiles.append(*itr);
+		tstrFiles.append(_T("\""));
+	}
+
+	size_t cmdLen = tstrFiles.length() + 1;
+	if(cmdLen > MAX_FILE_CMD)
+	{
+		MessageBox(pCmdInfo->hwnd, 
+			GetStringByKey(SHELL_EXT_TOO_MANY_FILES), 
+			GetStringByKey(SHELL_EXT_TOO_MANY_FILES), 
+			MB_OK | MB_ICONWARNING);
+		return;
+	}
+
+	COPYDATASTRUCT cdFiles;
+	cdFiles.dwData = 0;
+	cdFiles.cbData = (DWORD)(cmdLen * sizeof(TCHAR));
+	cdFiles.lpData = (PVOID)(tstrFiles.c_str());
+
+	SendMessage(hWndfHash,
+				WM_COPYDATA,
+				(WPARAM)pCmdInfo->hwnd,
+				(LPARAM)&cdFiles);
 }
