@@ -122,6 +122,10 @@ enum MainViewControllerState {
     
     NSMenu *fileMenu = [self getFileMenu];
     [fileMenu setAutoenablesItems:NO];
+
+    // Set top background view.
+    self.topBackView.drawsBackground = YES;
+    self.topBackView.backgroundColor = NSColor.textBackgroundColor;
     
     // Set buttons title.
     [self.verifyButton

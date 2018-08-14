@@ -12,6 +12,8 @@
 
 @interface MainViewController : NSViewController <NSTextViewDelegate>
 
+@property (weak) IBOutlet NSClipView *topBackView;
+
 @property (unsafe_unretained) IBOutlet NSScrollView *mainScrollView;
 @property (unsafe_unretained) IBOutlet NSTextView *mainTextView;
 
